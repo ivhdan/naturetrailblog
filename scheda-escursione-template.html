@@ -45,6 +45,13 @@
   font-family:var(--testo); font-style:italic; font-size:14px;
   color:var(--tenue); margin:0;
 }
+.sc-sviluppo{
+  display:inline-flex; align-items:center; gap:7px; margin:12px 0 0;
+  font-family:var(--dato); font-size:10.5px; letter-spacing:.06em;
+  border:1px solid var(--linea); border-radius:99px; padding:4px 12px 4px 9px;
+  background:rgba(255,255,255,.5);
+}
+.sc-sviluppo b{font-size:14px; line-height:1; color:var(--livello);}
 .sc-matricola{
   border-left:1px solid var(--inchiostro);
   display:grid; grid-template-rows:repeat(3,1fr); min-width:172px;
@@ -77,7 +84,16 @@
   display:flex; align-items:center; gap:10px; margin:0 0 14px;
 }
 .sc-h::after{content:''; flex:1; height:1px; background:var(--linea);}
-.sc-h i{font-style:normal; color:var(--livello);}
+.sc-h i{font-style:normal; color:var(--accento, var(--livello));}
+.sc-h::before{content:''; width:9px; height:9px; flex:0 0 9px;
+  background:var(--accento, var(--livello)); border-radius:1px;}
+.sc-vuoto{color:rgba(22,33,29,.3);}
+.sc-terra{--accento:#8c6a47;}
+.sc-quota{--accento:#5a7d5a;}
+.sc-marcia{--accento:#7a6a9a;}
+.sc-logi{--accento:#47603f;}
+.sc-acqua{--accento:#1c6e8c;}
+.sc-storia{--accento:#9a7b3f;}
 
 /* --- COPPIE ETICHETTA/VALORE --- */
 .sc-dl{display:grid; grid-template-columns:repeat(2,1fr); gap:0 26px; margin:0;}
@@ -139,7 +155,14 @@
 /* --- RESPONSIVE --- */
 @media (max-width:720px){
   .sc-cartiglio{grid-template-columns:1fr;}
-  .sc-matricola{border-left:0; border-top:1px solid var(--inchiostro);
+  .sc-sviluppo{
+  display:inline-flex; align-items:center; gap:7px; margin:12px 0 0;
+  font-family:var(--dato); font-size:10.5px; letter-spacing:.06em;
+  border:1px solid var(--linea); border-radius:99px; padding:4px 12px 4px 9px;
+  background:rgba(255,255,255,.5);
+}
+.sc-sviluppo b{font-size:14px; line-height:1; color:var(--livello);}
+.sc-matricola{border-left:0; border-top:1px solid var(--inchiostro);
     grid-template-rows:none; grid-template-columns:repeat(3,1fr);}
   .sc-matricola div{border-bottom:0; border-right:1px solid var(--linea);}
   .sc-matricola div:last-child{border-right:0;}
@@ -164,6 +187,7 @@
       <p class="sc-eyebrow">{{catena_montuosa}} · {{regione}}</p>
       <h1 class="sc-titolo">{{titolo}}</h1>
       <p class="sc-sottotitolo">{{sottotitolo}}</p>
+      <p class="sc-sviluppo"><b>{{simbolo_sviluppo}}</b> {{tipo_percorso}}</p>
     </div>
     <div class="sc-matricola">
       <div><span>Scheda</span>{{codice_scheda}}</div>
@@ -183,13 +207,13 @@
   </div>
 
   <!-- ============ PROFILO ALTIMETRICO ============ -->
-  <section class="sc-sez">
+  <section class="sc-sez sc-quota">
     <h2 class="sc-h"><i>01</i> Profilo altimetrico</h2>
     <div class="sc-profilo">{{profilo_svg}}</div>
   </section>
 
   <!-- ============ MAPPA ============ -->
-  <section class="sc-sez">
+  <section class="sc-sez sc-terra">
     <h2 class="sc-h"><i>02</i> Cartografia e navigazione virtuale</h2>
 <!--se:url_mymaps-->
     <div class="sc-mappa">
@@ -212,7 +236,7 @@
   </section>
 
   <!-- ============ INQUADRAMENTO ============ -->
-  <section class="sc-sez">
+  <section class="sc-sez sc-terra">
     <h2 class="sc-h"><i>03</i> Inquadramento</h2>
     <dl class="sc-dl">
       <div><dt>Località</dt><dd>{{localita}}</dd></div>
@@ -225,7 +249,7 @@
   </section>
 
   <!-- ============ DATI DEL PERCORSO ============ -->
-  <section class="sc-sez">
+  <section class="sc-sez sc-quota">
     <h2 class="sc-h"><i>04</i> Dati del percorso</h2>
     <dl class="sc-dl">
       <div><dt>Partenza</dt><dd>{{partenza}}<br><code>{{gps_partenza}}</code></dd></div>
@@ -244,7 +268,7 @@
   </section>
 
   <!-- ============ SEGNAPASSI (tabella di marcia) ============ -->
-  <section class="sc-sez">
+  <section class="sc-sez sc-marcia">
     <h2 class="sc-h"><i>05</i> Tabella di marcia</h2>
     <table class="sc-tab">
       <thead>
@@ -260,7 +284,7 @@
   </section>
 
   <!-- ============ LOGISTICA LUNGA PERCORRENZA ============ -->
-  <section class="sc-sez">
+  <section class="sc-sez sc-logi">
     <h2 class="sc-h"><i>06</i> Logistica di lunga percorrenza</h2>
     <dl class="sc-dl">
       <div><dt>Punti d'acqua</dt><dd>{{acqua}}</dd></div>
@@ -277,7 +301,7 @@
   </section>
 
   <!-- ============ OSSERVATORIO — blocco distintivo ============ -->
-  <section class="sc-sez sc-oss">
+  <section class="sc-sez sc-oss sc-acqua">
     <h2 class="sc-h"><i>07</i> Osservatorio · clima e assetto idrogeologico</h2>
     <dl class="sc-dl">
       <div><dt>Stato del sentiero</dt><dd>{{stato_sentiero}}</dd></div>
@@ -298,13 +322,13 @@
   </section>
 
   <!-- ============ RACCONTO ============ -->
-  <section class="sc-sez">
+  <section class="sc-sez sc-marcia">
     <h2 class="sc-h"><i>08</i> Relazione</h2>
     <p>{{relazione}}</p>
   </section>
 
   <!-- ============ TABELLA REVISIONI ============ -->
-  <section class="sc-sez sc-rev">
+  <section class="sc-sez sc-rev sc-storia">
     <h2 class="sc-h"><i>09</i> Storico dei rilievi</h2>
     <table class="sc-tab">
       <thead><tr><th>Rev.</th><th>Data</th><th>Condizioni</th><th>Variazioni rispetto al rilievo precedente</th></tr></thead>

@@ -92,6 +92,8 @@
   padding:1px 5px; border-radius:2px;}
 
 /* --- PROFILO / MAPPA --- */
+.sc-manca{font-family:var(--dato); font-size:11px; letter-spacing:.06em; color:var(--tenue);
+  border:1px dashed var(--linea); padding:22px; text-align:center; margin:0;}
 .sc-profilo{width:100%; overflow:hidden; background:rgba(255,255,255,.5); border:1px solid var(--linea);}
 .sc-profilo svg{display:block; width:100%; height:auto;}
 .sc-mappa{position:relative; width:100%; aspect-ratio:16/10; border:1px solid var(--inchiostro); background:#dfe3da;}
@@ -189,16 +191,23 @@
   <!-- ============ MAPPA ============ -->
   <section class="sc-sez">
     <h2 class="sc-h"><i>02</i> Cartografia e navigazione virtuale</h2>
+<!--se:url_mymaps-->
     <div class="sc-mappa">
-      <!-- Incollare qui l'URL di Google My Maps (Condividi > Incorpora nel sito) -->
       <iframe src="{{url_mymaps}}" loading="lazy" allowfullscreen
               referrerpolicy="no-referrer-when-downgrade"
               title="Mappa del percorso {{titolo}}"></iframe>
     </div>
+<!--/se:url_mymaps-->
+<!--senza:url_mymaps-->
+    <p class="sc-manca">Mappa non ancora pubblicata per questo percorso.</p>
+<!--/senza:url_mymaps-->
     <div class="sc-azioni">
-      <a class="sc-btn" href="{{url_google_earth}}" target="_blank" rel="noopener">Vista 3D su Google Earth</a>
-      <a class="sc-btn" href="{{url_gpx}}" download>Scarica traccia GPX</a>
-      <a class="sc-btn" href="{{url_streetview}}" target="_blank" rel="noopener">Street View punto di partenza</a>
+<!--se:url_google_earth-->      <a class="sc-btn" href="{{url_google_earth}}" target="_blank" rel="noopener">Vista 3D su Google Earth</a>
+<!--/se:url_google_earth-->
+<!--se:url_gpx-->      <a class="sc-btn" href="{{url_gpx}}" download>Scarica traccia GPX</a>
+<!--/se:url_gpx-->
+<!--se:url_streetview-->      <a class="sc-btn" href="{{url_streetview}}" target="_blank" rel="noopener">Street View punto di partenza</a>
+<!--/se:url_streetview-->
     </div>
   </section>
 
@@ -280,10 +289,12 @@
       <div><dt>Confronto storico</dt><dd>{{confronto_storico}}</dd></div>
       <div><dt>Fonti e dati</dt><dd>{{fonti}}</dd></div>
     </dl>
+<!--se:descrizione_criticita-->
     <p class="sc-nota-critica">
       <b>Punto critico · {{gps_criticita}}</b>
       {{descrizione_criticita}}
     </p>
+<!--/se:descrizione_criticita-->
   </section>
 
   <!-- ============ RACCONTO ============ -->

@@ -1,0 +1,19 @@
+{
+  "titolo": "Colle Pian Fum",
+  "sottotitolo": "Salita dal versante di Polpresa al valico tra Val di Viù e Val d'Ala",
+  "catena_montuosa": "Alpi Graie · Valli di Lanzo",
+  "regione": "Piemonte",
+  "provincia": "Torino (TO)",
+  "localita": "Viù",
+  "codice_scheda": "LAN-001",
+  "revisione": "00",
+  "data_rilievo": "05.10.2025",
+  "tipo_percorso": "Andata e ritorno sullo stesso itinerario",
+  "quota_max": "2042",
+  "etichette": [
+    "Valli di Lanzo",
+    "Piemonte",
+    "1 giorno"
+  ],
+  "quote_discordanti": "2042 m rilevati · 2042 m Gulliver · 1999 m CAI Lanzo"
+}

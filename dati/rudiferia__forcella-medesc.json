@@ -1,0 +1,21 @@
+{
+  "_nota": "I campi marcati DA VERIFICARE vengono da fonti terze, non dal rilievo: confermare o correggere prima di pubblicare.",
+
+  "titolo": "Rüdeferia — Forcella de Medesc",
+  "sottotitolo": "Dalla Val Badia all'orlo occidentale dell'altopiano di Fanes",
+  "catena_montuosa": "Dolomiti · Altopiano di Fanes",
+  "regione": "Trentino-Alto Adige",
+  "provincia": "Bolzano (BZ)",
+  "localita": "Badia — Rüdeferia, sopra La Villa",
+  "area_protetta": "Parco naturale Fanes-Sennes-Braies · Dolomiti UNESCO",
+  "codice_scheda": "FAN-001",
+  "revisione": "00",
+  "data_rilievo": "05.08.2026",
+  "tipo_percorso": "Lineare — tratta tra due nodi della rete",
+  "partenza": "Rüdeferia",
+  "arrivo": "Forcella de Medesc",
+  "segnavia": "DA VERIFICARE — le fonti indicano il 15 e poi il 12: confermare i numeri letti sui cartelli",
+  "quote_discordanti": "DA VERIFICARE — 2524 m rilevati (punto finale della traccia) · 2533 m e 2537 m secondo le fonti · confermare se la traccia raggiunge il valico",
+  "rifugi": "DA VERIFICARE — oltre la forcella, sul versante di Fanes: Lavarella, Fanes, Gran Fanes",
+  "etichette": ["Fanes", "Dolomiti", "Alto Adige"]
+}

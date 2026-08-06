@@ -340,7 +340,8 @@ def profilo_svg(st: dict, larghezza: int = 820, altezza: int = 230,
         etichette.append(f'<text x="{ml - 8}" y="{y + 3.5:.1f}" text-anchor="end">{int(q)}</text>')
         q += passo_griglia_m
 
-    i_cima = cy.index(max(cy))
+    q_cima = max(ys)                       # sulla serie completa, non sul campione
+    i_cima = min(range(len(cy)), key=lambda i: abs(cy[i] - q_cima))
     cima_x, cima_y = punti[i_cima]
     cima_y_testo = cima_y - 8 if cima_y > mt + 16 else cima_y + 14
 
@@ -372,7 +373,7 @@ def profilo_svg(st: dict, larghezza: int = 820, altezza: int = 230,
   {linee}
   <circle cx="{cima_x:.1f}" cy="{cima_y:.1f}" r="3" fill="#b23a1b"/>
   <text x="{cima_x:.1f}" y="{cima_y_testo:.1f}" text-anchor="middle"
-        font-family="IBM Plex Mono, monospace" font-size="9" fill="#b23a1b">{int(max(cy))}</text>
+        font-family="IBM Plex Mono, monospace" font-size="9" fill="#b23a1b">{int(round(q_cima))}</text>
   <g font-family="IBM Plex Mono, monospace" font-size="9" fill="rgba(22,33,29,.55)">
     {''.join(etichette)}
     <text x="{ml}" y="{mt - 5}" font-size="8" letter-spacing="1.4">QUOTA m s.l.m.</text>
@@ -463,6 +464,11 @@ def costruisci(template: str, gpx: Path | None = None,
             "simbolo_sviluppo": st["simbolo_sviluppo"],
         }
     valori = {**calcolati, **(dati or {})}      # il JSON scritto a mano vince
+
+    # versioni testuali per i dati strutturati: dentro il JSON non può finire
+    # né HTML né una virgoletta non sfuggita
+    for chiave in ("titolo", "sottotitolo"):
+        valori[f"{chiave}_json"] = json.dumps(str(valori.get(chiave, "")))[1:-1]
     html, mancanti = compila(template, valori, vuoto)
     html = compatta(html)
     st["note_pulizia"] = note

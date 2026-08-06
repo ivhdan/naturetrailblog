@@ -1,0 +1,57 @@
+name: Genera schede
+
+on:
+  push:
+    paths:
+      - 'gpx/**'
+      - 'dati/**'
+      - 'scheda-escursione-template.html'
+      - 'strumenti/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  genera:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Controlla i file dati
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          errori = []
+          for f in sorted(Path('dati').glob('*.json')):
+              try:
+                  json.loads(f.read_text(encoding='utf-8'))
+              except json.JSONDecodeError as e:
+                  errori.append(f"{f}: riga {e.lineno}, colonna {e.colno} - {e.msg}")
+          if errori:
+              print("File dati non validi:")
+              for x in errori:
+                  print("  " + x)
+              sys.exit(1)
+          print("Tutti i file dati sono validi.")
+          PY
+
+      - name: Genera le schede
+        run: python strumenti/genera_tutte.py
+
+      - name: Salva il risultato nel repository
+        run: |
+          git config user.name  'github-actions'
+          git config user.email 'github-actions@users.noreply.github.com'
+          git add schede/
+          if git diff --staged --quiet; then
+            echo "Nessuna scheda modificata."
+          else
+            git commit -m "Schede rigenerate automaticamente"
+            git push
+          fi

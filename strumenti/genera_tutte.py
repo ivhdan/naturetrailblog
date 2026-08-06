@@ -49,11 +49,27 @@ def main() -> None:
     os.chdir(radice)
 
     template = args.template.read_text(encoding="utf-8")
+
+    # campi uguali per tutte le schede (strumentazione, contatto, ...)
+    f_comuni = args.dati / "_comuni.json"
+    comuni = json.loads(f_comuni.read_text(encoding="utf-8")) if f_comuni.exists() else {}
     args.schede.mkdir(exist_ok=True)
 
     tracce = sorted(list(args.gpx.glob("*.gpx")) + list(args.gpx.glob("*.kml")))
     if args.slug:
         tracce = [t for t in tracce if t.stem == args.slug]
+    # una sola traccia per escursione: due file con lo stesso nome ma estensione
+    # diversa genererebbero due volte la stessa scheda, in ordine imprevedibile
+    visti = {}
+    for t in tracce:
+        visti.setdefault(t.stem, []).append(t.name)
+    doppioni = {k: v for k, v in visti.items() if len(v) > 1}
+    if doppioni:
+        print("Tracce duplicate: tieni un solo file per escursione.", file=sys.stderr)
+        for nome, elenco in doppioni.items():
+            print(f"   {nome}: " + ", ".join(elenco), file=sys.stderr)
+        sys.exit(1)
+
     if not tracce:
         print(f"Nessuna traccia trovata in {args.gpx}/. "
               f"Copia lì i file .gpx, uno per escursione.", file=sys.stderr)
@@ -66,7 +82,8 @@ def main() -> None:
     for traccia in tracce:
         slug = traccia.stem
         f_dati = args.dati / f"{slug}.json"
-        dati = json.loads(f_dati.read_text(encoding="utf-8")) if f_dati.exists() else {}
+        proprio = json.loads(f_dati.read_text(encoding="utf-8")) if f_dati.exists() else {}
+        dati = {**comuni, **proprio}      # il file della singola escursione vince
 
         try:
             html, mancanti, st = costruisci(template, traccia, dati, args.vuoto)
@@ -79,6 +96,15 @@ def main() -> None:
         print(f"{slug:<34} {st['lunghezza_km']:>6.1f} {st['dislivello_pos']:>6d} "
               f"{st['dislivello_neg']:>6d} {st['quota_min']:>5d}–{st['quota_max']:<6d} "
               f"{len(mancanti):>3}")
+
+    # le schede senza più una traccia sono resti di rinomine: vanno via, altrimenti
+    # restano pubblicate versioni che nessuno aggiorna più
+    if not args.slug:
+        attese = {t.stem for t in tracce}
+        for vecchia in sorted(args.schede.glob("*.html")):
+            if vecchia.stem not in attese:
+                vecchia.unlink()
+                print(f"rimossa scheda orfana: {vecchia.name}", file=sys.stderr)
 
     print("─" * 78)
     print(f"{len(tracce)} schede in {args.schede}/  ·  {totale_km:.0f} km complessivi")

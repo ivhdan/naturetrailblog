@@ -260,8 +260,30 @@ SEGNAPOSTO = {
 }
 
 
+def _blocchi_condizionali(template: str, valori: dict) -> str:
+    """Risolve i blocchi opzionali del template.
+
+        <!--se:chiave-->   ... visibile solo se il campo è compilato ...   <!--/se:chiave-->
+        <!--senza:chiave--> ... visibile solo se il campo è vuoto ...      <!--/senza:chiave-->
+
+    Serve dove un segnaposto finisce dentro un attributo HTML (href, src):
+    lì un riempitivo testuale romperebbe il markup, quindi è meglio non
+    generare affatto l'elemento.
+    """
+    def compilato(chiave: str) -> bool:
+        return valori.get(chiave) not in ("", None)
+
+    template = re.sub(r"<!--se:(\w+)-->(.*?)<!--/se:\1-->",
+                      lambda m: m.group(2) if compilato(m.group(1)) else "",
+                      template, flags=re.S)
+    return re.sub(r"<!--senza:(\w+)-->(.*?)<!--/senza:\1-->",
+                  lambda m: "" if compilato(m.group(1)) else m.group(2),
+                  template, flags=re.S)
+
+
 def compila(template: str, valori: dict, vuoto: str = "trattino") -> tuple[str, list[str]]:
     """Sostituisce i {{segnaposto}}. Restituisce (html, elenco campi vuoti)."""
+    template = _blocchi_condizionali(template, valori)
     riempitivo = SEGNAPOSTO.get(vuoto, vuoto)
     mancanti = set()
 

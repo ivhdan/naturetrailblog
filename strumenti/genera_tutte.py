@@ -39,7 +39,7 @@ def main() -> None:
     ap.add_argument("--dati", type=Path, default=Path("dati"))
     ap.add_argument("--schede", type=Path, default=Path("schede"))
     ap.add_argument("--template", type=Path, default=Path("scheda-escursione-template.html"))
-    ap.add_argument("--vuoto", default="todo", choices=["trattino", "todo"])
+    ap.add_argument("--vuoto", default="trattino", choices=["trattino", "todo"])
     ap.add_argument("--slug", help="genera solo questa escursione")
     args = ap.parse_args()
 

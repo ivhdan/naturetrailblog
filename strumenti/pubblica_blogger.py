@@ -82,6 +82,23 @@ def slug(post: dict) -> str:
     return url.rstrip("/").split("/")[-1].replace(".html", "")
 
 
+def mappa_slug(cartella_dati: Path) -> dict[str, str]:
+    """slug del post → nome del file locale.
+
+    Il nome del file segue la convenzione della rete (nodo__nodo), che Blogger
+    non accetta negli indirizzi. Chi ha un indirizzo diverso lo dichiara nel
+    proprio file dati con il campo "slug_blogger".
+    """
+    corrispondenze = {}
+    for f in sorted(cartella_dati.glob("*.json")):
+        try:
+            dichiarato = json.loads(f.read_text(encoding="utf-8")).get("slug_blogger")
+        except json.JSONDecodeError:
+            dichiarato = None
+        corrispondenze[dichiarato or f.stem] = f.stem
+    return corrispondenze
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Pubblica le schede sui post di Blogger.")
     ap.add_argument("--schede", type=Path, default=Path("schede"))
@@ -98,13 +115,16 @@ def main() -> None:
     post = elenca_post(api)
     print(f"{len(post)} post trovati sul blog.\n")
 
+    corrispondenze = mappa_slug(args.dati)
+
     da_fare, senza_scheda = [], []
     for p in post:
         s = slug(p)
-        if args.slug and s != args.slug:
+        nome = corrispondenze.get(s, s)          # traduce lo slug nel nome locale
+        if args.slug and args.slug not in (s, nome):
             continue
-        f = args.schede / f"{s}.html"
-        (da_fare if f.exists() else senza_scheda).append((p, s, f))
+        f = args.schede / f"{nome}.html"
+        (da_fare if f.exists() else senza_scheda).append((p, nome, f))
 
     if senza_scheda and not args.slug:
         print(f"{len(senza_scheda)} post senza scheda corrispondente "

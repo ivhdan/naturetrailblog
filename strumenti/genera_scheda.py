@@ -179,8 +179,12 @@ def statistiche(punti: list[tuple[float, float, float]]) -> dict:
     verticale = dpos / VEL_SALITA_MH + dneg / VEL_DISCESA_MH
     ore = max(orizzontale, verticale) + 0.5 * min(orizzontale, verticale)
 
+    forma, simbolo = sviluppo(punti)
+
     return {
         "punti": punti,
+        "sviluppo": forma,
+        "simbolo_sviluppo": simbolo,
         "quote": quote,
         "distanze_km": [d / 1000.0 for d in distanze],
         "lunghezza_km": round(km, 1),
@@ -192,6 +196,56 @@ def statistiche(punti: list[tuple[float, float, float]]) -> dict:
     }
 
 
+CHIUSURA_M = 300.0        # sotto questa distanza partenza e arrivo coincidono
+SOVRAPPOSIZIONE_M = 40.0  # due punti più vicini di così stanno sullo stesso sentiero
+QUOTA_RICALCO = 0.50      # oltre questa frazione ricalcata è andata e ritorno
+
+
+def sviluppo(punti: list[Punto]) -> tuple[str, str]:
+    """Riconosce la forma del percorso: anello, andata e ritorno, traversata.
+
+    Restituisce (etichetta, simbolo). Il criterio è geometrico: si guarda se
+    partenza e arrivo coincidono e quanta parte del ritorno ricalca l'andata.
+    """
+    if distanza_m(punti[0], punti[-1]) > CHIUSURA_M:
+        return "Lineare — traversata tra due punti diversi", "→"
+
+    # il percorso si divide nel punto più lontano dalla partenza, che in un
+    # andata e ritorno è l'inversione di marcia; dividere a metà dei punti
+    # sbaglierebbe ogni volta che le due tratte hanno densità diverse
+    lontananze = [distanza_m(punti[0], p) for p in punti]
+    giro = lontananze.index(max(lontananze))
+    andata, ritorno = punti[:giro], punti[giro:]
+    if len(andata) < 10 or len(ritorno) < 10:
+        return "Anello", "↻"
+
+    # campionamento: il confronto punto a punto sarebbe inutilmente costoso
+    campioni = andata[::max(1, len(andata) // 200)]
+    confronto = ritorno[::max(1, len(ritorno) // 600)]
+    ricalcati = sum(
+        1 for a in campioni
+        if any(distanza_m(a, b) < SOVRAPPOSIZIONE_M for b in confronto))
+
+    if ricalcati / len(campioni) >= QUOTA_RICALCO:
+        return "Andata e ritorno sullo stesso itinerario", "⇄"
+    return "Anello", "↻"
+
+
+def diagnosi_sviluppo(punti: list[Punto]) -> str:
+    """Riga di controllo: quanto è stato ricalcato e quanto distano i capi."""
+    lontananze = [distanza_m(punti[0], p) for p in punti]
+    giro = lontananze.index(max(lontananze))
+    andata, ritorno = punti[:giro], punti[giro:]
+    if len(andata) < 10 or len(ritorno) < 10:
+        return "traccia troppo corta per il confronto"
+    campioni = andata[::max(1, len(andata) // 200)]
+    confronto = ritorno[::max(1, len(ritorno) // 600)]
+    ricalcati = sum(1 for a in campioni
+                    if any(distanza_m(a, b) < SOVRAPPOSIZIONE_M for b in confronto))
+    return (f"capi distanti {distanza_m(punti[0], punti[-1]):.0f} m, "
+            f"ricalco {ricalcati / len(campioni):.0%}")
+
+
 def ore_hm(ore: float) -> str:
     h = int(ore)
     m = int(round((ore - h) * 60))
@@ -201,10 +255,44 @@ def ore_hm(ore: float) -> str:
 
 
 # ---------------------------------------------------------------- profilo SVG
-def profilo_svg(st: dict, larghezza: int = 820, altezza: int = 210,
+FASCE_PENDENZA = [          # (soglia superiore, colore, etichetta)
+    (0.15, "#47603f", "fino al 15%"),
+    (0.25, "#8c6a47", "15–25%"),
+    (9.99, "#b23a1b", "oltre il 25%"),
+]
+FINESTRA_PENDENZA_M = 25.0   # semiampiezza su cui misurare la pendenza
+
+
+def _fascia(pendenza: float) -> int:
+    for i, (soglia, _, _) in enumerate(FASCE_PENDENZA):
+        if abs(pendenza) <= soglia:
+            return i
+    return len(FASCE_PENDENZA) - 1
+
+
+def _pendenze(xs_km: list[float], ys: list[float]) -> list[int]:
+    """Fascia di pendenza per ogni vertice.
+
+    La pendenza si misura su una finestra di alcune decine di metri e non tra
+    due punti consecutivi: sulla distanza breve il rumore del GPS produrrebbe
+    un tratteggio di colori privo di significato.
+    """
+    fasce = []
+    for i in range(len(xs_km)):
+        j, k = i, i
+        while j > 0 and (xs_km[i] - xs_km[j]) * 1000 < FINESTRA_PENDENZA_M:
+            j -= 1
+        while k < len(xs_km) - 1 and (xs_km[k] - xs_km[i]) * 1000 < FINESTRA_PENDENZA_M:
+            k += 1
+        base = (xs_km[k] - xs_km[j]) * 1000
+        fasce.append(_fascia((ys[k] - ys[j]) / base) if base > 1 else 0)
+    return fasce
+
+
+def profilo_svg(st: dict, larghezza: int = 820, altezza: int = 230,
                 passo_griglia_m: int = 200) -> str:
-    """Profilo altimetrico in SVG inline, coerente con la palette della scheda."""
-    ml, mr, mt, mb = 46, 14, 16, 26
+    """Profilo altimetrico in SVG inline, con la linea colorata per pendenza."""
+    ml, mr, mt, mb = 46, 14, 16, 46
     w, h = larghezza - ml - mr, altezza - mt - mb
 
     xs, ys = st["distanze_km"], st["quote"]
@@ -216,13 +304,33 @@ def profilo_svg(st: dict, larghezza: int = 820, altezza: int = 210,
     fx = lambda k: ml + (k / kmax) * w
     fy = lambda q: mt + h - ((q - qmin) / span) * h
 
-    # sottocampiona: oltre ~900 vertici il path pesa senza aggiungere leggibilità
     passo = max(1, len(xs) // 900)
-    vertici = [(fx(xs[i]), fy(ys[i])) for i in range(0, len(xs), passo)]
-    vertici.append((fx(xs[-1]), fy(ys[-1])))
+    idx = list(range(0, len(xs), passo))
+    if idx[-1] != len(xs) - 1:
+        idx.append(len(xs) - 1)
+    cx = [xs[i] for i in idx]
+    cy = [ys[i] for i in idx]
+    fasce = _pendenze(cx, cy)
+    punti = [(fx(a), fy(b)) for a, b in zip(cx, cy)]
 
-    linea = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in vertici)
-    area = f"{linea} L{fx(kmax):.1f},{mt + h:.1f} L{ml:.1f},{mt + h:.1f} Z"
+    # area sottesa
+    area = ("M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in punti)
+            + f" L{fx(kmax):.1f},{mt + h:.1f} L{ml:.1f},{mt + h:.1f} Z")
+
+    # la linea si spezza in tratti omogenei per fascia di pendenza
+    tratti, corrente, fascia_corrente = [], [punti[0]], fasce[0]
+    for i in range(1, len(punti)):
+        corrente.append(punti[i])
+        if fasce[i] != fascia_corrente:
+            tratti.append((fascia_corrente, corrente))
+            corrente, fascia_corrente = [punti[i]], fasce[i]
+    tratti.append((fascia_corrente, corrente))
+
+    linee = "".join(
+        f'<path d="M{" L".join(f"{x:.1f},{y:.1f}" for x, y in t)}" fill="none" '
+        f'stroke="{FASCE_PENDENZA[f][1]}" stroke-width="2.2" '
+        f'stroke-linejoin="round" stroke-linecap="round"/>'
+        for f, t in tratti if len(t) > 1)
 
     griglia, etichette = [], []
     q = qmin
@@ -232,30 +340,51 @@ def profilo_svg(st: dict, larghezza: int = 820, altezza: int = 210,
         etichette.append(f'<text x="{ml - 8}" y="{y + 3.5:.1f}" text-anchor="end">{int(q)}</text>')
         q += passo_griglia_m
 
+    i_cima = cy.index(max(cy))
+    cima_x, cima_y = punti[i_cima]
+    cima_y_testo = cima_y - 8 if cima_y > mt + 16 else cima_y + 14
+
     passo_km = 1 if kmax <= 12 else (2 if kmax <= 30 else 5)
     k = 0
     while k <= kmax:
         etichette.append(
-            f'<text x="{fx(k):.1f}" y="{mt + h + 17}" text-anchor="middle">{int(k)}</text>')
+            f'<text x="{fx(k):.1f}" y="{mt + h + 15}" text-anchor="middle">{int(k)}</text>')
         k += passo_km
 
+    legenda, lx = [], ml
+    for _, colore, testo in FASCE_PENDENZA:
+        legenda.append(
+            f'<rect x="{lx}" y="{altezza - 15}" width="9" height="9" fill="{colore}" rx="1"/>'
+            f'<text x="{lx + 13}" y="{altezza - 7}" font-size="8.5">{testo}</text>')
+        lx += 96
+
     return f'''<svg viewBox="0 0 {larghezza} {altezza}" xmlns="http://www.w3.org/2000/svg"
-     role="img" aria-label="Profilo altimetrico: {st['lunghezza_km']} km, {st['dislivello_pos']} metri di dislivello positivo">
+     role="img" aria-label="Profilo altimetrico: {st['lunghezza_km']} km, {st['dislivello_pos']} metri di dislivello positivo, linea colorata per pendenza">
+  <defs>
+    <linearGradient id="sc-quote" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#8c6a47" stop-opacity=".45"/>
+      <stop offset="45%"  stop-color="#5a7d5a" stop-opacity=".32"/>
+      <stop offset="100%" stop-color="#47603f" stop-opacity=".10"/>
+    </linearGradient>
+  </defs>
   <g stroke="rgba(22,33,29,.14)" stroke-width="1">{''.join(griglia)}</g>
-  <path d="{area}" fill="rgba(140,106,71,.18)"/>
-  <path d="{linea}" fill="none" stroke="#8c6a47" stroke-width="1.8"
-        stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="{area}" fill="url(#sc-quote)"/>
+  {linee}
+  <circle cx="{cima_x:.1f}" cy="{cima_y:.1f}" r="3" fill="#b23a1b"/>
+  <text x="{cima_x:.1f}" y="{cima_y_testo:.1f}" text-anchor="middle"
+        font-family="IBM Plex Mono, monospace" font-size="9" fill="#b23a1b">{int(max(cy))}</text>
   <g font-family="IBM Plex Mono, monospace" font-size="9" fill="rgba(22,33,29,.55)">
     {''.join(etichette)}
-    <text x="{ml}" y="{altezza - 4}" font-size="8" letter-spacing="1.4">KM</text>
     <text x="{ml}" y="{mt - 5}" font-size="8" letter-spacing="1.4">QUOTA m s.l.m.</text>
+    <text x="{ml + w}" y="{mt + h + 15}" text-anchor="end" font-size="8" letter-spacing="1.4">KM</text>
+    {''.join(legenda)}
   </g>
 </svg>'''
 
 
 # ---------------------------------------------------------------- composizione
 SEGNAPOSTO = {
-    "trattino": "—",
+    "trattino": '<span class="sc-vuoto">—</span>',
     "todo": '<span style="opacity:.45;font-style:italic">da compilare</span>',
 }
 
@@ -298,6 +427,18 @@ def compila(template: str, valori: dict, vuoto: str = "trattino") -> tuple[str, 
     return re.sub(r"\{\{(\w+)\}\}", sostituisci, template), sorted(mancanti)
 
 
+def compatta(html: str) -> str:
+    """Elimina gli a-capo del sorgente.
+
+    L'editor di Blogger, se l'opzione delle interruzioni di riga è attiva,
+    trasforma ogni a-capo del sorgente in un <br> e la scheda si riempie di
+    spazi verticali. Con l'HTML su una riga sola il problema non si pone,
+    qualunque sia l'impostazione del blog.
+    """
+    html = re.sub(r"\s*\n\s*", " ", html)
+    return re.sub(r">\s+<", "><", html)
+
+
 def costruisci(template: str, gpx: Path | None = None,
                dati: dict | None = None, vuoto: str = "trattino") -> tuple[str, list[str], dict]:
     """Compone una scheda. Senza GPX i campi calcolati restano vuoti.
@@ -318,9 +459,12 @@ def costruisci(template: str, gpx: Path | None = None,
             "profilo_svg": profilo_svg(st),
             "gps_partenza": f"{st['punti'][0][0]:.5f}, {st['punti'][0][1]:.5f}",
             "gps_arrivo": f"{st['punti'][-1][0]:.5f}, {st['punti'][-1][1]:.5f}",
+            "tipo_percorso": st["sviluppo"],
+            "simbolo_sviluppo": st["simbolo_sviluppo"],
         }
     valori = {**calcolati, **(dati or {})}      # il JSON scritto a mano vince
     html, mancanti = compila(template, valori, vuoto)
+    html = compatta(html)
     st["note_pulizia"] = note
     return html, mancanti, st
 

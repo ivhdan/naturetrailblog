@@ -95,6 +95,21 @@
 .sc-acqua{--accento:#1c6e8c;}
 .sc-storia{--accento:#9a7b3f;}
 
+/* --- GRIGLIA DENSA: etichetta sopra, valore sotto --- */
+.sc-griglia{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:1px; background:var(--linea); border:1px solid var(--linea);
+}
+.sc-griglia > div{background:var(--carta); padding:9px 12px 10px;}
+.sc-griglia dt{
+  font-family:var(--dato); font-size:8.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--tenue); margin:0 0 4px;
+}
+.sc-griglia dd{margin:0; font-size:14px; line-height:1.35;}
+.sc-griglia dd code{font-family:var(--dato); font-size:11.5px; color:var(--tenue);}
+.sc-w2{grid-column:span 2;}
+.sc-w4{grid-column:span 4;}
+
 /* --- COPPIE ETICHETTA/VALORE --- */
 .sc-dl{display:grid; grid-template-columns:repeat(2,1fr); gap:0 26px; margin:0;}
 .sc-dl > div{
@@ -161,6 +176,8 @@
   .sc-matricola div:last-child{border-right:0;}
   .sc-targa{grid-template-columns:repeat(3,1fr);}
   .sc-targa div{border-bottom:1px solid var(--linea);}
+  .sc-griglia{grid-template-columns:repeat(2,1fr);}
+  .sc-w4{grid-column:span 2;}
   .sc-dl{grid-template-columns:1fr;}
   .sc-dl > div{grid-template-columns:126px 1fr;}
   .sc-titolo{font-size:23px;}
@@ -218,7 +235,6 @@
 <!--senza:url_mymaps-->
     <p class="sc-manca">Mappa non ancora pubblicata per questo percorso.</p>
 <!--/senza:url_mymaps-->
-<!--se:url_gpx--><!--se:url_google_earth--><!--/se:url_google_earth--><!--/se:url_gpx-->
     <div class="sc-azioni">
 <!--se:url_google_earth-->      <a class="sc-btn" href="{{url_google_earth}}" target="_blank" rel="noopener">Vista 3D su Google Earth</a>
 <!--/se:url_google_earth-->
@@ -229,57 +245,36 @@
     </div>
   </section>
 
-  <!-- ============ INQUADRAMENTO ============ -->
+  <!-- ============ IL PERCORSO ============ -->
   <section class="sc-sez sc-terra">
-    <h2 class="sc-h"><i>03</i> Inquadramento</h2>
-    <dl class="sc-dl">
+    <h2 class="sc-h"><i>03</i> Il percorso</h2>
+    <dl class="sc-griglia">
       <div><dt>Località</dt><dd>{{localita}}</dd></div>
       <div><dt>Regione</dt><dd>{{regione}}</dd></div>
       <div><dt>Provincia</dt><dd>{{provincia}}</dd></div>
       <div><dt>Area protetta</dt><dd>{{area_protetta}}</dd></div>
-      <div><dt>Cartografia</dt><dd>{{cartografia}}</dd></div>
-      <div><dt>Substrato geologico</dt><dd>{{geologia}}</dd></div>
-    </dl>
-  </section>
 
-  <!-- ============ DATI DEL PERCORSO ============ -->
-  <section class="sc-sez sc-quota">
-    <h2 class="sc-h"><i>04</i> Dati del percorso</h2>
-    <dl class="sc-dl">
-      <div><dt>Partenza</dt><dd>{{partenza}}<br><code>{{gps_partenza}}</code></dd></div>
-      <div><dt>Arrivo</dt><dd>{{arrivo}}<br><code>{{gps_arrivo}}</code></dd></div>
-      <div><dt>Sviluppo</dt><dd>{{tipo_percorso}}</dd></div>
+      <div class="sc-w2"><dt>Partenza</dt><dd>{{partenza}} <code>{{gps_partenza}}</code></dd></div>
+      <div class="sc-w2"><dt>Arrivo</dt><dd>{{arrivo}} <code>{{gps_arrivo}}</code></dd></div>
+
       <div><dt>Segnavia</dt><dd>{{segnavia}}</dd></div>
-      <div><dt>Quota massima</dt><dd>{{quota_max}} m s.l.m.</dd></div>
-      <div><dt>Quote discordanti</dt><dd>{{quote_discordanti}}</dd></div>
+      <div><dt>Difficoltà</dt><dd>{{difficolta_estesa}}</dd></div>
       <div><dt>Fondo prevalente</dt><dd>{{terreno}}</dd></div>
       <div><dt>Esposizione</dt><dd>{{esposizione}}</dd></div>
-      <div><dt>Difficoltà</dt><dd>{{difficolta_estesa}}</dd></div>
+
       <div><dt>Periodo consigliato</dt><dd>{{periodo}}</dd></div>
       <div><dt>Con bambini</dt><dd>{{bambini}}</dd></div>
       <div><dt>Con cani</dt><dd>{{cani}}</dd></div>
-    </dl>
-  </section>
+      <div><dt>Substrato geologico</dt><dd>{{geologia}}</dd></div>
 
-  <!-- ============ SEGNAPASSI (tabella di marcia) ============ -->
-  <section class="sc-sez sc-marcia">
-    <h2 class="sc-h"><i>05</i> Tabella di marcia</h2>
-    <table class="sc-tab">
-      <thead>
-        <tr><th>km</th><th>Quota</th><th>D+ parziale</th><th>Punto di riferimento</th><th>Note operative</th></tr>
-      </thead>
-      <tbody>
-        <tr><td class="n">0,0</td><td class="n">{{q0}}</td><td class="n">0</td><td>{{wp0}}</td><td>{{nota0}}</td></tr>
-        <tr><td class="n">{{km1}}</td><td class="n">{{q1}}</td><td class="n">{{dp1}}</td><td>{{wp1}}</td><td>{{nota1}}</td></tr>
-        <tr><td class="n">{{km2}}</td><td class="n">{{q2}}</td><td class="n">{{dp2}}</td><td>{{wp2}}</td><td>{{nota2}}</td></tr>
-        <tr><td class="n">{{km3}}</td><td class="n">{{q3}}</td><td class="n">{{dp3}}</td><td>{{wp3}}</td><td>{{nota3}}</td></tr>
-      </tbody>
-    </table>
+      <div class="sc-w2"><dt>Cartografia</dt><dd>{{cartografia}}</dd></div>
+      <div class="sc-w2"><dt>Quote discordanti</dt><dd>{{quote_discordanti}}</dd></div>
+    </dl>
   </section>
 
   <!-- ============ LOGISTICA LUNGA PERCORRENZA ============ -->
   <section class="sc-sez sc-logi">
-    <h2 class="sc-h"><i>06</i> Logistica di lunga percorrenza</h2>
+    <h2 class="sc-h"><i>04</i> Logistica di lunga percorrenza</h2>
     <dl class="sc-dl">
       <div><dt>Punti d'acqua</dt><dd>{{acqua}}</dd></div>
       <div><dt>Autonomia idrica</dt><dd>{{autonomia_idrica}}</dd></div>
@@ -296,7 +291,7 @@
 
   <!-- ============ OSSERVATORIO — blocco distintivo ============ -->
   <section class="sc-sez sc-oss sc-acqua">
-    <h2 class="sc-h"><i>07</i> Osservatorio · clima e assetto idrogeologico</h2>
+    <h2 class="sc-h"><i>05</i> Osservatorio · clima e assetto idrogeologico</h2>
     <dl class="sc-dl">
       <div><dt>Stato del sentiero</dt><dd>{{stato_sentiero}}</dd></div>
       <div><dt>Dissesti rilevati</dt><dd>{{dissesti}}</dd></div>
@@ -317,13 +312,13 @@
 
   <!-- ============ RACCONTO ============ -->
   <section class="sc-sez sc-marcia">
-    <h2 class="sc-h"><i>08</i> Relazione</h2>
+    <h2 class="sc-h"><i>06</i> Relazione</h2>
     <p>{{relazione}}</p>
   </section>
 
   <!-- ============ TABELLA REVISIONI ============ -->
   <section class="sc-sez sc-rev sc-storia">
-    <h2 class="sc-h"><i>09</i> Storico dei rilievi</h2>
+    <h2 class="sc-h"><i>07</i> Storico dei rilievi</h2>
     <table class="sc-tab">
       <thead><tr><th>Rev.</th><th>Data</th><th>Condizioni</th><th>Variazioni rispetto al rilievo precedente</th></tr></thead>
       <tbody>

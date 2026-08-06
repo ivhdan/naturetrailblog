@@ -450,6 +450,14 @@ def costruisci(template: str, gpx: Path | None = None,
     calcolati, st, note = {}, {}, []
     if gpx is not None:
         punti, note = pulisci(leggi_traccia(gpx))
+
+        # Registrazioni della sola salita: se il rientro è avvenuto per la stessa
+        # via, si specchia la traccia. Meglio dichiararlo che pubblicare metà
+        # percorso spacciandolo per una traversata.
+        if (dati or {}).get("ritorno_stessa_via"):
+            punti = punti + list(reversed(punti))[1:]
+            note.append("ritorno ricostruito specchiando la traccia di salita")
+
         st = statistiche(punti)
         calcolati = {
             "lunghezza_km": f"{st['lunghezza_km']:.1f}".replace(".", ","),
@@ -460,7 +468,9 @@ def costruisci(template: str, gpx: Path | None = None,
             "profilo_svg": profilo_svg(st),
             "gps_partenza": f"{st['punti'][0][0]:.5f}, {st['punti'][0][1]:.5f}",
             "gps_arrivo": f"{st['punti'][-1][0]:.5f}, {st['punti'][-1][1]:.5f}",
-            "tipo_percorso": st["sviluppo"],
+            "tipo_percorso": ("Andata e ritorno — ritorno ricostruito dalla salita"
+                              if (dati or {}).get("ritorno_stessa_via")
+                              else st["sviluppo"]),
             "simbolo_sviluppo": st["simbolo_sviluppo"],
         }
     valori = {**calcolati, **(dati or {})}      # il JSON scritto a mano vince

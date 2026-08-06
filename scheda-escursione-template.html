@@ -155,13 +155,6 @@
 /* --- RESPONSIVE --- */
 @media (max-width:720px){
   .sc-cartiglio{grid-template-columns:1fr;}
-  .sc-sviluppo{
-  display:inline-flex; align-items:center; gap:7px; margin:12px 0 0;
-  font-family:var(--dato); font-size:10.5px; letter-spacing:.06em;
-  border:1px solid var(--linea); border-radius:99px; padding:4px 12px 4px 9px;
-  background:rgba(255,255,255,.5);
-}
-.sc-sviluppo b{font-size:14px; line-height:1; color:var(--livello);}
 .sc-matricola{border-left:0; border-top:1px solid var(--inchiostro);
     grid-template-rows:none; grid-template-columns:repeat(3,1fr);}
   .sc-matricola div{border-bottom:0; border-right:1px solid var(--linea);}
@@ -225,6 +218,7 @@
 <!--senza:url_mymaps-->
     <p class="sc-manca">Mappa non ancora pubblicata per questo percorso.</p>
 <!--/senza:url_mymaps-->
+<!--se:url_gpx--><!--se:url_google_earth--><!--/se:url_google_earth--><!--/se:url_gpx-->
     <div class="sc-azioni">
 <!--se:url_google_earth-->      <a class="sc-btn" href="{{url_google_earth}}" target="_blank" rel="noopener">Vista 3D su Google Earth</a>
 <!--/se:url_google_earth-->
@@ -352,17 +346,14 @@
 </div>
 
 <!-- ============ DATI STRUTTURATI PER I MOTORI DI RICERCA ============ -->
+<!--se:titolo-->
 <script type="application/ld+json">
 {
   "@context":"https://schema.org",
-  "@type":"HowTo",
-  "name":"{{titolo}}",
-  "description":"{{sottotitolo}}",
-  "supply":[{"@type":"HowToSupply","name":"{{attrezzatura}}"}],
-  "step":[
-    {"@type":"HowToStep","name":"{{wp0}}","text":"{{nota0}}"},
-    {"@type":"HowToStep","name":"{{wp1}}","text":"{{nota1}}"},
-    {"@type":"HowToStep","name":"{{wp2}}","text":"{{nota2}}"}
-  ]
+  "@type":"TouristTrip",
+  "name":"{{titolo_json}}",
+  "description":"{{sottotitolo_json}}",
+  "touristType":"Escursionismo"
 }
 </script>
+<!--/se:titolo-->
